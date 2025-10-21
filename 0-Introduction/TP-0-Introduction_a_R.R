@@ -431,6 +431,151 @@ str(pokemon_df)
 str(read.csv("data/pokemons.csv",stringsAsFactors = F))                                                                                                 
                                                                                                           
 
+# Type des colonnes d'un fichier CSV 
+# Ici par exemple , le nom des pokemons est considéré comme un facteur à ... 800 modalités (pour 800 individus)  : ce qui est peu pertinent, chaque nom étant a priori unique et propre à chaque individu de la population de pokemons ; par ailleurs  il est peu probable de devoir faire des regrouppements par nom.
+# Au contraire, les facteurs  `Type.1` et `Type.2` sont des facteurs à respectivement 18 et 19 modalités, ce qui peut s'entendre , vu le nom de la variable, et le nombre de modalités significativement plus faibles que le nombre d'individus.
+#Nous pouvons changer le type de la variable `Name` en utilisant la fonction `as.character()` sur la colonne du dataframe pour la remplacer.
+pokemon_df$Name <-  as.character(pokemon_df$Name)
+
+
+#Autre problème : les valeurs de la variable `Legendary` sont reconnues comme des facteurs à deux modalités `"True"` et `"False"` alors que leurs valeurs sont clairement booléennes.
+#La fonction `as.logical()` est capable de transformer automatiquement les valeurs `"T", "TRUE", "True", "true"` en la valeur `TRUE` du langage R (de meme pour les variations de la valeurs `False`)
+pokemon_df$Legendary <-  as.logical(pokemon_df$Legendary)
+
+
+
+# Écriture de fichier CSV
+# L'écriture d'un dataframe dans le format CSV se fait avec la fonction  `write.csv()` , qui prend en argument un dataframe et un chemin d'accès vers un nouveau fichier : 
+write.csv( iris, file = "test_writecsv.csv")
+
+
+
+
+
+
+#####################
+#16 Programation avec R
+
+# Nous savons déjà comment définir une fonction , il nous reste à voir comment écrire les traitements conditionnels, et les boucles. 
+
+
+## Bloc `if`
+# Un bloc conditionnel s'écrit de la façon suivante : 
+
+# if (condition) {
+  # code  éxécuté si condition vraie 
+#}else{
+  # code si condition fausse
+#}
+
+#La condition doit renvoyer une valeur **booléenne**, TRUE ou FALSE.
+
+
+
+### Variante `ifelse`
+
+
+#Cette variante permet d'écrire une instruction conditionnelle sous une forme un peu plus compacte.
+#ifelse(condition, valeur si vraie , valeur si fausse)
+
+
+#Voilà un exemple avec les penguins
+
+#Nous allons tester si la masse de chaque pingouin est inférieure ou supérieure à la moyenne de tous les pingouins  du dataset : 
+
+masse_moyenne <- mean(penguins$body_mass_g, na.rm = T)
+ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd")
+
+
+masse_moyenne <- mean(penguins$body_mass_g, na.rm = T)
+ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% head
+
+
+
+## Boucle `for`
+
+
+#La boucle for s'écrit de la façon suivante : 
+  
+#for (variable in collection) {
+#  #code éxécuté pour chaque élément de la collection 
+#}
+
+
+
+
+
+### Sortie de boucle prématurée 
+
+#pour interrompre une boucle for , on utilise le mot clé `break`
+
+#for (x in c(1,2,3,4,5,6,7)) {
+#  print(x)
+#  if(x==4) {break}
+#}
+
+
+
+### Passer une itération
+#Pour passer une itération sans interrompre la boucle , on utilise le mot clé `next`
+
+#for (x in c(1,2,3,4,5,6,7)) {
+#  if(x==3) {next}
+#  print(x)
+#}
+
+
+
+
+## Boucle `while`
+#La boucle `while` s'écrit de la façon suivante  :
+
+#while (condition) {
+  #code 
+#}
+
+
+
+## Applications vectorielles
+#les application vectorielles sont des variantes des traitements itératifs (boucle `for`),en R elles sont plus efficaces.
+#Elles s'apparentent à de la programmation fonctionnelle.  Les fonctions vectorielles de bases appliquent une fonction à tous les termes d'une collection ou d'une matrice. 
+#Les fonctions de base se nomment  `sapply`, `lapply`, `vapply` pour traiter des vecteurs, et `apply`,`mapply` pour traiter des tableaux et des matrices.
+
+
+my_vec <-  seq(from=10, to=100, by=5)
+
+my_func <- function(x){return(x+2)}
+sapply(my_vec, my_func)
+lapply(my_vec, my_func)
+
+
+
+
+################
+#17 Exercice 4
+
+
+#Implémentez en R le [crible d'ératosthène](https://fr.wikipedia.org/wiki/Crible_d%27%C3%89ratosth%C3%A8ne)
+
+#Fonction Eratosthène(Limite)
+#L = tableau de booléen de taille Limite, initialisé à Vrai
+#Mettre à Faux les cases d'indice pair > 2
+#    L[1] = Faux
+#    i=3
+#    Tant que i*i≤Limite
+#        Si L[i]
+#            Pour j de i*i à Limite par pas de 2*i
+#                L[j] = Faux
+#            Fin pour
+#        Fin si
+#        i=i+1
+#    Fin tant que
+#    Retourner L
+#Fin fonction
+
+
+
+
 
 
 
