@@ -1,6 +1,7 @@
 
 ##################################
 # TP0 : Introduction au language R
+#   (CORRECTION)
 ##################################
 
 
@@ -28,8 +29,14 @@ cat("abc", 12.3, sqrt(49), TRUE)
 a <-  42
 a
 a + 10
+a = 42
 
-
+test<-function(x){print(x)}
+test(x<-42)
+x
+rm(x) # supprimer la variable
+test(x=42)
+x # erreur : variable définie par '=' dans le scope de la fonction uniquement
 
 
 #########################################
@@ -40,6 +47,9 @@ n <-  42.2
 ch <-  "text"
 b <-  FALSE
 f <- factor(c("pomme", "banane", "kiwi"))
+
+# définir les niveaux d'un facteur indépendamment de ses valeurs
+f <- factor(c("pomme", "banane", "kiwi","banane"), levels = c("pomme", "banane", "kiwi", "poire"))
 
 
 
@@ -68,7 +78,7 @@ co
 
 # Ajouter une élément à la fin d'un vecteur avec la fonction `c()` qui combine une valeur avec un objet
 c(co, pi)
-
+c(pi, co) # ajouter au début
 
 # Supprimer un élément : exclure l'élément avec un signe "moins" devant son index.
 # pour supprimer effectivement le cinquième élément , il faut mettre à jour la variable vecteur avec une affectation 
@@ -349,17 +359,34 @@ plot(iris$Sepal.Length, iris$Sepal.Width)
 
 # 0. Installer et charger le jeu de données du package `palmerpenguins`
 install.packages("palmerpenguins")
-library(palmerpenguins )
+library(palmerpenguins)
 
 # -> Le jeu de données de ce package se nomme `penguins` 
 
 
 # 1. Quelles sont les variables de ce jeu de données ? 
-# 2. Quel est le poids moyens des pingouins  ? 
+names(penguins)
+str(penguins)
+
+# 2. Quel est le poids moyens des pingouins ?
+mean(penguins$body_mass_g)
+
 # 3. Créer un dataframe qui ne contienne que les pingouins de l'espèce Gentoo 
-# 4. Quelle est le poids moyen d'un pingouin Gentoo ? 
+gentoo <- penguins %>% filter(species == 'Gentoo')
+
+# 4. Quelle est le poids moyen d'un pingouin Gentoo ?
+gentoo %>% summarise(poids_moyen = mean(body_mass_g, na.rm=T)) # attention à filter les valeurs manquantes (NA) avec l'argument na.rm
+mean(gentoo$body_mass_g, na.rm = T)
+
 # 5. Sur quelle(s) île(s) trouve-t-on  les pingouins de l'espèce Adélie?
+islands <- unique(penguins$island[penguins$species=="Adelie"]) # -> toutes les iles, plus intéressant avec l'espèce Chinstrap
+islands <- unique(penguins$island[penguins$species=="Chinstrap"])
+
+
 # 6. Y-a-t' il des autres pingouins que des pingouins Adélie sur les îles déterminées à la question 5 ? 
+unique(penguins$species[penguins$island%in%islands]) # attention à regarder les valeurs du facteur et non pas les levels
+# pour enlever le facteur:
+unique(as.character(penguins$species[penguins$island%in%islands]))
 
 
 
@@ -436,7 +463,7 @@ str(pokemon_df)
 # Par défaut , les colonnes qui contiennent des chaînes de caractères sont traitées comme des facteurs (i.e. des variables modales, qui ne peuvent prendre qu'un nombre fini de valeurs).
 # Pour changer ce comportement , il faut passer en argument à `read.csv()` l'argument `stringsAsFactors=FALSE`
 str(read.csv("data/pokemons.csv",stringsAsFactors = F))                                                                                                 
-                                                                                                          
+
 
 # Type des colonnes d'un fichier CSV 
 # Ici par exemple , le nom des pokemons est considéré comme un facteur à ... 800 modalités (pour 800 individus)  : ce qui est peu pertinent, chaque nom étant a priori unique et propre à chaque individu de la population de pokemons ; par ailleurs  il est peu probable de devoir faire des regrouppements par nom.
@@ -470,9 +497,9 @@ write.csv( iris, file = "test_writecsv.csv")
 # Un bloc conditionnel s'écrit de la façon suivante : 
 
 # if (condition) {
-  # code  éxécuté si condition vraie 
+# code  éxécuté si condition vraie 
 #}else{
-  # code si condition fausse
+# code si condition fausse
 #}
 
 #La condition doit renvoyer une valeur **booléenne**, TRUE ou FALSE.
@@ -503,7 +530,7 @@ ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% h
 
 
 #La boucle for s'écrit de la façon suivante : 
-  
+
 #for (variable in collection) {
 #  #code éxécuté pour chaque élément de la collection 
 #}
@@ -538,7 +565,7 @@ ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% h
 #La boucle `while` s'écrit de la façon suivante  :
 
 #while (condition) {
-  #code 
+#code 
 #}
 
 
