@@ -12,6 +12,7 @@
 
 # Génération de données synthétiques
 x <-  rnorm(10000, 10,5)
+hist(x, breaks=50, main="Histogramme de x", xlab="valeurs de x")
 
 # Rappel: statistiques descriptives
 summary(x)
@@ -21,7 +22,8 @@ sd(x)
 
 ###
 # Exercice 1 : Calculer l'écart interquartile
-
+quantile(x, 0.75) - quantile(x, 0.25)
+IQ(x)
 
 
 ###
@@ -29,7 +31,11 @@ sd(x)
 # prenant en argument un vecteur de valeurs, et un nombre d'intervalles qui discrétise son étendue. 
 
 
-
+mode <- function(x, breaks = nclass.Sturges(x)) {
+  h <- hist(x, breaks = breaks, plot = FALSE)
+  mode_value <- h$mids[which.max(h$counts)]
+  return(mode_value)
+}
 
 
 
@@ -66,6 +72,7 @@ mean(arrondis)
 # `starwars` est un dataset sur les personnages de la franchise de films Star Wars. 
 # (chargé automatiquement avec dplyr)                                                                                                                         
 head(starwars) 
+
                                                                                                                                     
 # Filtrage suivant une valeur numérique : height
 filter(starwars, height < 100)
@@ -86,7 +93,7 @@ starwars %>% filter(height >= 180, species=="Human")
 # dont le monde de résidence (variable `homeworld`) est Tatooine.
 # indice : utiliser la fonction `slice_max` de dplyr.
 
-
+starwars %>% filter(species == "Human", homeworld == "Tatooine") %>% slice_max(height, n=10)
 
 
 
@@ -135,7 +142,10 @@ starwars %>%
                                                                                                                                     
 ## Exercice 5: Calculer la masse moyenne des personnages par planète
 
- 
+starwars %>%
+        group_by(homeworld) %>%
+        summarise(avg_mass = mean(mass, na.rm = T)) %>%
+        select(homeworld, avg_mass)
 
  
 

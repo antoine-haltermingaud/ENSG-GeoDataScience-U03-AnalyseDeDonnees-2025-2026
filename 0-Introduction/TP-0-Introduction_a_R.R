@@ -388,34 +388,45 @@ islands = unique(penguins$island[penguins$species=="Adelie"])
 penguins[penguins$island%in%islands,]
 
 
+#########################################
+#12 Fonctions
+
+#Pour définir une fonction , la syntaxe est la suivante  :
+my_func <- function(arg1, arg2){
+  result = 42+arg1*arg2
+  return(result)
+}
+
+
+#  Exemple de fonction : renvoyer le ou les indices des valeurs maximales d'une liste de nombres
+index_of_max <- function(my_list){
+  ind <- which(my_list==max(my_list))
+  return(ind)
+}
+index_of_max(c(24,5,9,78,12,45,78,23,47,-75))
+
+
+
+
 # #########################################
-# #12 Fonctions
-
-# #Pour définir une fonction , la syntaxe est la suivante  : 
-# my_func <- function(arg1, arg2){
-#   result = 42+arg1*arg2
-#   return(result)
-# }
+#13 Exercice 3
 
 
-# #  Exemple de fonction : renvoyer le ou les indices des valeurs maximales d'une liste de nombres
-# index_of_max <- function(my_list){
-#   ind <- which(my_list==max(my_list))
-#   return(ind)
-# }
-# index_of_max(c(24,5,9,78,12,45,78,23,47,-75))
+# 1. Écrire une fonction qui prend en argument un vecteur de valeurs numériques et qui le centre et le réduit , c'est-à-dire qui soustrait à chaque valeur la moyenne du vecteur et qui divise par la valeur de l'écart-type . Vous pouvez tester votre fonction avec un vecteur initialisé par vos soins, un dataframe de votre choix ou le dataframe `iris`.
+center_and_reduce <- function(my_vector){
+  my_mean <- mean(my_vector)
+  my_std <- sd(my_vector)
+  
+  if (my_std == 0) {
+    return(my_vector - my_mean)
+  }
+  return((my_vector - my_mean)/my_std)
+}
+
+center_and_reduce(c(1,2,1))
 
 
-
-
-# #########################################
-# #13 Exercice 3
-
-
-# # 1. Écrire une fonction qui prend en argument un vecteur de valeurs numériques et qui le centre et le réduit , c'est-à-dire qui soustrait à chaque valeur la moyenne du vecteur et qui divise par la valeur de l'écart-type . Vous pouvez tester votre fonction avec un vecteur initialisé par vos soins, un dataframe de votre choix ou le dataframe `iris`.
-
-
-# # 2. Afficher l'histogramme du vecteur centré et réduit.
+# 2. Afficher l'histogramme du vecteur centré et réduit.
 
 
 
