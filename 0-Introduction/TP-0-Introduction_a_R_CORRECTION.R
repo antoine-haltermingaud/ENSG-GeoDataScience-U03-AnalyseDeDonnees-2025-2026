@@ -390,7 +390,6 @@ unique(as.character(penguins$species[penguins$island%in%islands]))
 
 
 
-
 #########################################
 #12 Fonctions
 
@@ -400,6 +399,16 @@ my_func <- function(arg1, arg2){
   return(result)
 }
 
+my_func(2,3)
+
+my_func <- function(arg1=0, arg2=0){
+  result = 42+arg1*arg2
+  return(result)
+}
+
+my_func
+my_func()
+my_func(2,3)
 
 #  Exemple de fonction : renvoyer le ou les indices des valeurs maximales d'une liste de nombres
 index_of_max <- function(my_list){
@@ -415,11 +424,25 @@ index_of_max(c(24,5,9,78,12,45,78,23,47,-75))
 #13 Exercice 3
 
 
-# 1. Écrire une fonction qui prend en argument un vecteur de valeurs numériques et qui le centre et le réduit , c'est-à-dire qui soustrait à chaque valeur la moyenne du vecteur et qui divise par la valeur de l'écart-type . Vous pouvez tester votre fonction avec un vecteur initialisé par vos soins, un dataframe de votre choix ou le dataframe `iris`.
+# 1. Écrire une fonction qui prend en argument un vecteur de valeurs numériques et qui le centre et le réduit 
+# c'est-à-dire qui soustrait à chaque valeur la moyenne du vecteur et qui divise par la valeur de l'écart-type .
+# Vous pouvez tester votre fonction avec un vecteur initialisé par vos soins, un dataframe de votre choix ou le dataframe `iris`.
+
+normalisation <- function(x){
+  m = mean(x, na.rm=T)
+  s = sd(x,na.rm = T)
+  if(s == 0) return(x)
+  return((x - m)/s)
+}
+
+normalisation(iris$Petal.Length)
 
 
 # 2. Afficher l'histogramme du vecteur centré et réduit.
 
+hist(normalisation(iris$Petal.Length),breaks=20)
+
+hist(normalisation(rnorm(1000000)),breaks = 200)
 
 
 
@@ -432,16 +455,20 @@ index_of_max(c(24,5,9,78,12,45,78,23,47,-75))
 rep(c(1,5,10),10)
 
 # discrétiser un intervalle en précisant le quantum 
-seq(from= 25 , to = 250, by = 22 )
+seq(from=25,to=250,by=22)
+10:100
 
 # discrétiser un intervalle en précisant la longueur 
-seq(from= 25 , to = 250, length.out = 10 )
+seq(from=25,to=250,length.out = 10)
 
 # échantillonner une loi uniforme entre deux valeurs
-runif(25, min=  -15 , max = 8 )
+runif(n=25,min=-15,max=8)
+runif(10000)
 
 # échantilloner une loi normale de moyenne et d'écart-type donné 
+rnorm(100000)
 rnorm(25, m = 12 , sd = 2)
+
 
 
 
@@ -462,14 +489,14 @@ str(pokemon_df)
 
 # Par défaut , les colonnes qui contiennent des chaînes de caractères sont traitées comme des facteurs (i.e. des variables modales, qui ne peuvent prendre qu'un nombre fini de valeurs).
 # Pour changer ce comportement , il faut passer en argument à `read.csv()` l'argument `stringsAsFactors=FALSE`
-str(read.csv("data/pokemons.csv",stringsAsFactors = F))                                                                                                 
+str(read.csv("data/pokemons.csv",stringsAsFactors = F))                                                                                          
 
 
 # Type des colonnes d'un fichier CSV 
 # Ici par exemple , le nom des pokemons est considéré comme un facteur à ... 800 modalités (pour 800 individus)  : ce qui est peu pertinent, chaque nom étant a priori unique et propre à chaque individu de la population de pokemons ; par ailleurs  il est peu probable de devoir faire des regrouppements par nom.
 # Au contraire, les facteurs  `Type.1` et `Type.2` sont des facteurs à respectivement 18 et 19 modalités, ce qui peut s'entendre , vu le nom de la variable, et le nombre de modalités significativement plus faibles que le nombre d'individus.
 #Nous pouvons changer le type de la variable `Name` en utilisant la fonction `as.character()` sur la colonne du dataframe pour la remplacer.
-pokemon_df$Name <-  as.character(pokemon_df$Name)
+pokemon_df$Name <- as.character(pokemon_df$Name)
 
 
 #Autre problème : les valeurs de la variable `Legendary` sont reconnues comme des facteurs à deux modalités `"True"` et `"False"` alors que leurs valeurs sont clairement booléennes.
@@ -480,15 +507,14 @@ pokemon_df$Legendary <-  as.logical(pokemon_df$Legendary)
 
 # Écriture de fichier CSV
 # L'écriture d'un dataframe dans le format CSV se fait avec la fonction  `write.csv()` , qui prend en argument un dataframe et un chemin d'accès vers un nouveau fichier : 
-write.csv( iris, file = "test_writecsv.csv")
-
+write.csv(iris, file = "test_writecsv.csv")
 
 
 
 
 
 #####################
-#16 Programation avec R
+#16 Programmation avec R
 
 # Nous savons déjà comment définir une fonction , il nous reste à voir comment écrire les traitements conditionnels, et les boucles. 
 
@@ -504,6 +530,8 @@ write.csv( iris, file = "test_writecsv.csv")
 
 #La condition doit renvoyer une valeur **booléenne**, TRUE ou FALSE.
 
+v <- sample.int(6,1)
+if(v==1){print("dead")}else{print("alive")}
 
 
 ### Variante `ifelse`
@@ -521,11 +549,6 @@ masse_moyenne <- mean(penguins$body_mass_g, na.rm = T)
 ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd")
 
 
-masse_moyenne <- mean(penguins$body_mass_g, na.rm = T)
-ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% head
-
-
-
 ## Boucle `for`
 
 
@@ -535,7 +558,7 @@ ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% h
 #  #code éxécuté pour chaque élément de la collection 
 #}
 
-
+for(i in 1:10){print(i)}
 
 
 
@@ -543,20 +566,20 @@ ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% h
 
 #pour interrompre une boucle for , on utilise le mot clé `break`
 
-#for (x in c(1,2,3,4,5,6,7)) {
-#  print(x)
-#  if(x==4) {break}
-#}
+for (x in c(1,2,3,4,5,6,7)) {
+  print(x)
+  if(x==4) {break}
+}
 
 
 
 ### Passer une itération
 #Pour passer une itération sans interrompre la boucle , on utilise le mot clé `next`
 
-#for (x in c(1,2,3,4,5,6,7)) {
-#  if(x==3) {next}
-#  print(x)
-#}
+for (x in c(1,2,3,4,5,6,7)) {
+  if(x==3) {next}
+  print(x)
+}
 
 
 
@@ -568,6 +591,8 @@ ifelse(penguins$body_mass_g < masse_moyenne, "plus léger" , "plus lourd") %>% h
 #code 
 #}
 
+i=0
+while(i<10){i<-i+1}
 
 
 ## Applications vectorielles
@@ -582,6 +607,12 @@ my_func <- function(x){return(x+2)}
 sapply(my_vec, my_func)
 lapply(my_vec, my_func)
 
+
+apply(iris[,-5],MARGIN = 1,my_func)
+apply(iris[,-5],MARGIN = 1,mean)
+
+colSums(iris[,-5])
+rowSums(iris[,-5])
 
 
 
@@ -606,6 +637,22 @@ lapply(my_vec, my_func)
 #    Fin tant que
 #    Retourner L
 #Fin fonction
+
+erast <- function(L){
+  premiers = rep(T,L)
+  premiers[1] = F
+  premiers[seq(4,L,2)] = F
+  i=3
+  while(i*i<= L){
+    if(premiers[i]){
+      premiers[seq(i*i,L,2*i)] = F
+    }
+    i=i+1
+  }
+  return(premiers)
+}
+
+(1:20)[erast(20)]
 
 
 
