@@ -22,13 +22,17 @@ d <- read_csv("http://nextcloud.iscpif.fr/index.php/s/eegwmt29kimWgdz/download")
 
 # 1. Décrire le jeu de données : nombre de variables, d'observations
 #    Nb : une ligne contient les variables qui décrivent un match d'un joueur 
+dim(d)
+d
 
-
+data.frame(d[1:12, 1:20])
 # 2. Quel est le type de la colonne `position`  et de la colonne  `dpm`  du jeu de données ? 
 
+d %>% select(position, dpm)
 
 # 3. Faire un graphe de la frequence d'apparition des champions
 
+hist(d)
 
 # 4. Calculer la valeur moyenne de la colonne `totalgold`
 
