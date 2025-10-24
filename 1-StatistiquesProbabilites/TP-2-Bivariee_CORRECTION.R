@@ -13,6 +13,7 @@
 
 # le package readr est compatible avec dplyr et permet de lire directement depuis une url
 library(readr)
+library(dplyr)
 d <- read_csv("http://nextcloud.iscpif.fr/index.php/s/eegwmt29kimWgdz/download") # url du fichier csv transféré sur une nextcloud (pour éviter l'authentification google drive, tout de même possible en R avec le package googledrive)
 
 
@@ -228,14 +229,31 @@ plot(dnum$monsterkills,dnum$totalgold)
 #########################
 # Exercice
 
+ddiscr <- d %>% select(!matches("\\d"))
+ddiscr <-  select(ddiscr,-c(year, playoffs,patch, participantid))
+ddiscr <- select(ddiscr,c(game,side,champion,playername,firstblood,firstbloodvictim,result))
+
+
 # 1. Chercher des variables qualitatives qui semblent avoir un lien avec la variable qualitative `result`
+chisq.test(ddiscr$side,ddiscr$result)
+chisq.test(ddiscr$champion,ddiscr$result)
+chisq.test(ddiscr$firstblood,ddiscr$result)
+chisq.test(ddiscr$game,ddiscr$result)
 
 
 # 2. Proposer d autres variables discrètes construites à partir de seuils sur des variables numériques et tester leur relation avec result
+chisq.test(ifelse(d$totalgold>10000,"1","0"),ddiscr$result)
 
 
 # 3. Quelle est la variable discrète la plus liée au résultat du match ?
 
+res = data.frame()
+for(v in names(ddiscr)){
+  if(v != "result"){
+    stat = chisq.test(ddiscr[,v],ddiscr$result)$statistic
+    res=rbind(res,c(stat,v))
+  }
+}
 
 
 
