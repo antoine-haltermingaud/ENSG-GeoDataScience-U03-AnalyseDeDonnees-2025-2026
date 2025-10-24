@@ -13,6 +13,7 @@
 
 # le package readr est compatible avec dplyr et permet de lire directement depuis une url
 library(readr)
+library(dplyr)
 d <- read_csv("http://nextcloud.iscpif.fr/index.php/s/eegwmt29kimWgdz/download") # url du fichier csv transféré sur une nextcloud (pour éviter l'authentification google drive, tout de même possible en R avec le package googledrive)
 
 
@@ -27,14 +28,17 @@ d
 
 data.frame(d[1:12, 1:20])
 # 2. Quel est le type de la colonne `position`  et de la colonne  `dpm`  du jeu de données ? 
-
 d %>% select(position, dpm)
 
 # 3. Faire un graphe de la frequence d'apparition des champions
+library(ggplot2)
 
-hist(d)
+g <- ggplot(d %>% select(champion) %>% na.omit())
+g+geom_bar(mapping = aes(x = champion))
 
 # 4. Calculer la valeur moyenne de la colonne `totalgold`
+
+mean(d$totalgold, na.rm = T)
 
 
 # 5. Comparer les moyennes de `totalgold` selon le résultat de la partie (colonne result)
@@ -153,6 +157,7 @@ dnum <-  select(dnum,-c(year, playoffs,patch, participantid, game, result  ))
 
 
 # 3. Quelle est la variable discrète la plus liée au résultat du match ?
+
 
 
 
