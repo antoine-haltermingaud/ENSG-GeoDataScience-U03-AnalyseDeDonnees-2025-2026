@@ -1,6 +1,6 @@
 
 ##################################
-# TP2 : Statistiques univariées
+# TP1 : Statistiques univariées
 ##################################
 
 
