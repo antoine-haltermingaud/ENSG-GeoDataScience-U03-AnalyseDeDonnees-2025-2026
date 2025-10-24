@@ -129,7 +129,7 @@ dnum <-  select(dnum,-c(year, playoffs,patch, participantid, game, result  ))
 
 
 
-# 3. Pour les variables `dpm` et `earned.gpm`, tracer le nuage de points, puis proposer des conditions
+# 3. Pour les variables `monsterkills` et `totalgold`, tracer le nuage de points, puis proposer des conditions
 #   pour décomposer les observations en 2 groupes
 
 
