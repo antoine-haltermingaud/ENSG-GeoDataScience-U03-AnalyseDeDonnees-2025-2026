@@ -42,18 +42,23 @@ mean(d$totalgold, na.rm = T)
 
 
 # 5. Comparer les moyennes de `totalgold` selon le résultat de la partie (colonne result)
-
+d %>% group_by(result) %>% summarise(meangold = mean(totalgold))
 
 
 # 6. Calculer puis ajouter au dataframe l'or par minute (en utilisant `totalgold` et `gamelength`)
-
+d <- d %>% mutate(gold_per_min = totalgold/(gamelength/60)) 
 
 # 7. Faire la même chose avec les kills par minute
+d <- d %>% mutate(kill_per_min = kills/(gamelength/60)) 
 
 
 # 8. Tracer un nuage de points avec or par minute vs kills par minute, en colorant par victoire ou défaite.
 
 
+# Transparency
+ggplot(d, aes(x=gold_per_min, y=kill_per_min, colour = result)) + 
+  geom_point(size=6, color="#69b3a2") +
+  ggtitle("Transparency") 
 
 
 
