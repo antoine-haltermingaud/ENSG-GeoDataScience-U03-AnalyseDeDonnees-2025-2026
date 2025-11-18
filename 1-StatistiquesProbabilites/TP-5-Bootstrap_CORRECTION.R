@@ -84,40 +84,39 @@ sample(fire_pokemons$Name, size=20, replace = T)
 #   - évaluer la moyenne de points de vie (HP) un nombre $B$ de fois,
 #     sur un échantillon (avec remise) de même taille que fire_pokemons
 #   - afficher l'histogramme des moyennes estimées
-B = 10000
+B = 100000
 
 n = length(fire_pokemons)
 
 bootstrapped_hp_means = sapply(1:B,function(b){mean(sample(fire_pokemons$HP,size=n,replace = T))})
 
-hist(bootstrapped_hp_means)
+hist(bootstrapped_hp_means,breaks=50)
 
 
-# Calcul d'un intervalle de confiance 
-#  ->  En considérant que la distribution des moyennes observée est gaussienne, calculer l'intervalle de confiance à 95%.
-#   Rappel:  [mu - sigma ; mu+ sigma]$ est un CI à ~ 68% pour une Gaussienne
-#            [mu - 2*sigma ; mu+ 2*sigma]$ est un CI à ~ 95%
-#            [mu - 3*sigma ; mu+ 3*sigma]$ est un CI à ~ 99.7%
-
-
+# Calcul d'un intervalle de confiance
+#  ->  En considérant que la distribution des moyennes observée est gaussienne,
+#      calculer l'intervalle de confiance à 95%.
+#   Rappel:  [mu - sigma ; mu+ sigma] est un CI à ~ 68% pour une Gaussienne
+#            [mu - 2*sigma ; mu+ 2*sigma] est un CI à ~ 95%
+#            [mu - 3*sigma ; mu+ 3*sigma] est un CI à ~ 99.7%
+mean(bootstrapped_hp_means) - 2*sd(bootstrapped_hp_means)
+mean(bootstrapped_hp_means) + 2*sd(bootstrapped_hp_means)
 
 
 # Même calcul en utilisant la fonction t.test (argument conf.level)
-
-
-
+t.test(pokemons$HP,conf.level=0.95)
 
 
 # Calcul direct de l'intervalle de confiance avec les quantiles empiriques des statistiques bootstrapées
-#   (valide pour des distributiosn symétriques)
-
-
+#   (valide pour des distributions symétriques)
+quantile(bootstrapped_hp_means,0.025)
+quantile(bootstrapped_hp_means,0.975)
 
 # Calcul direct de l'intervalle de confiance avec la distribution cumulée (fonction ecdf) (valide dans tous les cas)
 #   -> inverser "à la main" la CDF
-
-
-
+g = ecdf(bootstrapped_hp_means)
+g(59.7)
+g(80.62)
 
 
 
@@ -127,15 +126,33 @@ hist(bootstrapped_hp_means)
 
 
 
-#4.1 Encapsuler la boucle de bootstrap précédente dans une fonction permettant de varier nombre et taille des samples
+#4.1 Encapsuler la boucle de bootstrap précédente dans une fonction permettant
+#    de varier nombre et taille des samples
+bootstrap_CI_mean <- function(x,B,sample_size){
+  bootstrapped_hp_means = sapply(1:B,function(b){mean(sample(x,size=sample_size,replace = T))})
+  return(c(CI_inf = quantile(bootstrapped_hp_means,0.025),
+      CI_sup = quantile(bootstrapped_hp_means,0.975))
+  )
+}
 
 
-
-#4.2 Calculer pour un ensemble de paramètres les estimations d'un intervalle de confiance pour la moyenne des points de vie
-
+#4.2 Calculer pour un ensemble de paramètres les estimations d'un intervalle de confiance
+#    pour la moyenne des points de vie
+res_SA = data.frame()
+for(B in seq(1000,5000,1000)){
+  show(B)
+  for(sample_size in seq(20,300,10)){
+    show(sample_size)
+    CI = bootstrap_CI_mean(fire_pokemons$HP, B, sample_size)
+    res_SA = rbind(res_SA,c(B=B,sample_size=sample_size,CI_inf=CI[1],CI_sup=CI[2]))
+  }
+}
+names(res_SA) <-c("B","sample_size","CI_inf","CI_sup")
 
 
 #4.3 Faire des graphiques et interpréter
+ggplot(res_SA)+geom_line(aes(x=B,y=CI_inf,color=sample_size,group=sample_size))+
+  geom_line(aes(x=B,y=CI_sup,color=sample_size,group=sample_size),linetype=2)
 
 
 
@@ -144,10 +161,27 @@ hist(bootstrapped_hp_means)
 
 
 # Recommencer la procédure avec une autre variable ou une autre catégorie de pokemons
+bootstrapped_speed_means = sapply(1:1000,function(b){mean(sample(pokemons$Speed,size=300,replace = T))})
+quantile(bootstrapped_speed_means,0.025)
+quantile(bootstrapped_speed_means,0.975)
+
+# -> intéressant à faire pour une distribution "bizarre"
 
 
+# Calculer un intervalle de confiance sur la corrélation entre attaque et défense
+#    en utilisant un bootstrap sur l'ensemble des pokemons
+cor.test(pokemons$Attack,pokemons$Defense)
 
-# Calculer un intervalle de confiance sur la corrélation entre attaque et défense en utilisant un bootstrap sur l'ensemble des pokemons
+n=nrow(pokemons)
+
+bootstrapped_correlation = sapply(1:10000,function(b){
+  sampled_rows = sample(1:n,size=n,replace = T)
+  cor(pokemons$Attack[sampled_rows],pokemons$Defense[sampled_rows])
+})
+quantile(bootstrapped_correlation,0.025)
+quantile(bootstrapped_correlation,0.975)
+
+hist(bootstrapped_correlation,breaks = 50)
 
 
 
