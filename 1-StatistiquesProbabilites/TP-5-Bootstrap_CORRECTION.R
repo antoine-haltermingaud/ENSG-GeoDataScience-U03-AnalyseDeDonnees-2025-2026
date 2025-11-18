@@ -18,7 +18,7 @@ mean(x)
 
 
 # Estimation de la moyenne d'échantillons de taille variable
-samples=seq(from=0, to= 1000, by=10)
+samples=seq(from=10, to= 100000, by=100)
 moyenne <-  c()
 for (n in samples){
   echantillon <- rnorm(n,0,1)
@@ -27,13 +27,13 @@ for (n in samples){
 
 
 # Faire le même calcul avec sapply
-
+moyenne = sapply(samples,function(n){mean(rnorm(n))})
 
 
 
 # Faire un graphique moyenne=f(n), interpréter
-
-
+plot(samples,moyenne,type='l')
+ # -> convergence de l'amplitude en sqrt(n) (TCL)
 
 
 
@@ -42,12 +42,19 @@ for (n in samples){
 
 
 # Simuler la moyenne de la somme de deux échantillons normaux
+moyenne_somme = sapply(samples,function(n){mean(rnorm(n)+rnorm(n))})
+plot(samples,moyenne_somme,type='l')
 
+sd(rnorm(10000)+rnorm(10000))
+# -> toute combinaison linéaire de lois normales est une loi normale
 
 
 # Même chose avec le quotient
-
-
+moyenne_quotient = sapply(samples,function(n){mean(rnorm(n)/rnorm(n))})
+moyenne_quotient_2 = sapply(samples,function(n){mean(rnorm(n))/mean(rnorm(n))})
+plot(samples,moyenne_quotient,type='l')
+plot(samples,moyenne_quotient_2,type='l')
+# -> quantité qui n'existe pas, "estimateurs" convergent pas
 
 
 
@@ -77,8 +84,13 @@ sample(fire_pokemons$Name, size=20, replace = T)
 #   - évaluer la moyenne de points de vie (HP) un nombre $B$ de fois,
 #     sur un échantillon (avec remise) de même taille que fire_pokemons
 #   - afficher l'histogramme des moyennes estimées
+B = 10000
 
+n = length(fire_pokemons)
 
+bootstrapped_hp_means = sapply(1:B,function(b){mean(sample(fire_pokemons$HP,size=n,replace = T))})
+
+hist(bootstrapped_hp_means)
 
 
 # Calcul d'un intervalle de confiance 
