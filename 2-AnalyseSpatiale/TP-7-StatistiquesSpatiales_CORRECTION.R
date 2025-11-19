@@ -39,6 +39,10 @@ popdeps = read_delim('data/insee/Departements.csv', delim=";")
 
 # Insee: Filosofi 2020
 insee_filosofi <- read_delim(file = 'data/filosofi/cc_filosofi_2020_DEP.csv', delim = ";")
+# metadonnées des variables d'intérêt :
+#   - MED20 : Médiane du niveau de vie (€)
+#   - PPEN20 : Part des pensions, retraites et rentes (%)
+#   - PPAT20 : Part des revenus du patrimoine et des autres revenus (%)
 
 # jointure
 deps = left_join(deps,popdeps[,c("CODDEP","PTOT")],
