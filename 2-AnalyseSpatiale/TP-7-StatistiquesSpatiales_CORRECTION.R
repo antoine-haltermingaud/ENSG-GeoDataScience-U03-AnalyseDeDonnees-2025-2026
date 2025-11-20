@@ -232,7 +232,7 @@ library(lme4)
 
 
 # version brute (pas correct statistiquement)
-lmmulti = lm(prix~MED20+PPEN20+PPAT20+surface_bati+surface_terrain+NOM_REG,data=d)
+lmmulti = lm(prix~PTOT+MED20+PPEN20+PPAT20+surface_bati+surface_terrain+NOM_REG,data=d)
 summary(lmmulti)
 
 
@@ -241,6 +241,9 @@ multiniv_intercept =
   lme4::lmer(prix~PTOT+MED20+PPEN20+PPAT20+surface_bati+surface_terrain + (1 | NOM_REG),
        data=d)
 res = summary(multiniv_intercept)
+#  -> pour récupérer les valeurs des constantes pour chaque groupe, utiliser coefficients(...) sur le modèle et pas sur le summary
+coefficients(multiniv_intercept)
+#  -> sur les coefs globaux, très légère différence avec l'estimateur non correct ci-dessus (OLS sur indicatrices)
 
 
 # modèle simple avec coefficients variables
@@ -249,6 +252,9 @@ multiniv_slopes =
          (PTOT+MED20+PPEN20+PPAT20+surface_bati+surface_terrain | NOM_REG),
        data=d)
 summary(multiniv_slopes)
+coefficients(multiniv_slopes) # -> au sein de chaque région, influence différente de chaque variable
+
+
 
 # comparer les modèles et en tester d'autres
 AIC(lmmulti)
