@@ -9,6 +9,9 @@
 #   -> liens d'appartenance entre entreprises agreges (poids du lien: turnover pondere)
 #      base ORBIS : Rozenblat, C. (2021). Intra and inter-city networks of multinational firms (2010-2019). Handbook on cities and networks, 511-556.
 #   
+# Ref : Raimbault, J., Zdanowska, N., & Arcaute, E. (2020). Modeling growth of urban firm networks. arXiv preprint arXiv:2009.05528.
+#      https://arxiv.org/abs/2009.05528
+#
 #  Caractéristiques des aires urbaines:
 #    * turnover des entreprises
 #    * parts de differents secteurs d'activite (secteurs d'activité: https://ec.europa.eu/competition/mergers/cases/index/nace_all.html)
@@ -95,24 +98,34 @@ mf_map(st_cities, type = 'prop_choro', var = c('turnover','specK'), leg_pos = c(
 # 1.3) Modeles d'interaction spatiale simples
 
 # fitter un modele avec la distance uniquement pour expliquer le poids des liens (weight)
-
-
+summary(lm(data=links,log(weight)~log(distance)))
+# ! les liens nuls ont déjà été filtrés -> biais potentiel
+# Interpretation : coef significatif pour la distance, effet attendu (négatif), mais modèle au R2 quasi nul 
 
 
 # idem avec similarité, comparer
-
+summary(lm(data=links,log(weight)~log(sim)))
 
 
 # essayer en ajoutant d'autres variables
 
+# 2 types de distances
+modele_distances = lm(data=links,log(weight)~log(sim)+log(distance))
+summary(modele_distances)
+
+# modele gravitaire
+modele_gravitaire = lm(data=links,log(weight)~log(sim)+log(distance)+log(from_turnover)+log(to_turnover))
+summary(modele_gravitaire)
+
+# formulation exponentielle
+summary(lm(data=links,log(weight)~log(sim)+distance+log(from_turnover)+log(to_turnover)))
 
 
 # verifier la presence d'overfitting (fonction AIC)
+AIC(modele_distances) - AIC(modele_gravitaire)
 
 
-
-# déterminer le meilleur modèle en termes d'AIC
-
+# Optionnel : déterminer le meilleur modèle en termes d'AIC
 
 
 
@@ -120,26 +133,58 @@ mf_map(st_cities, type = 'prop_choro', var = c('turnover','specK'), leg_pos = c(
 #  -> utiliser des effets fixes
 
 # origin
-
+modele_gravitaire_originconstrained = 
+  lm(log(weight)~log(sim)+log(distance)+log(from_turnover)+
+       log(to_turnover)+as.character(from_fua), data = links)
+summary(modele_gravitaire_originconstrained)
 
 
 # destination 
+modele_gravitaire_destinationconstrained = 
+  lm(log(weight)~log(sim)+log(distance)+log(from_turnover)+
+       log(to_turnover)+as.character(to_fua), data = links)
+summary(modele_gravitaire_destinationconstrained)
 
 
 
 
 # contrainte double
+modele_gravitaire_ODconstrained = 
+  lm(log(weight)~log(sim)+log(distance)+log(from_turnover)+
+       log(to_turnover)+as.character(to_fua)+as.character(from_fua), data = links)
+summary(modele_gravitaire_ODconstrained)
 
+AIC(modele_gravitaire) - AIC(modele_gravitaire_ODconstrained)
 
 
 # effets fixes pays origin / pays destination
+modele_gravitaire_pays = lm(log(weight)~log(distance)+log(sim)+log(from_turnover)+
+                              log(to_turnover)+ from_country + to_country, data=links)
+summary(modele_gravitaire_pays)
 
+modele_gravitaire_pays_ODconstrained =
+  lm(log(weight)~log(distance)+log(sim)+log(from_turnover)+
+       log(to_turnover)+ from_country + to_country+
+       as.character(from_fua)+as.character(to_fua), data=links)
+summary(modele_gravitaire_pays_ODconstrained)
 
 
 ##########
 # 1.5) Modeles de poisson
 #  utiliser glm(...,family = poisson(link='log')) : generalized linear model
 #  ! pour Poisson, les poids doivent être entiers
+
+links$weight_integer = round(links$weight)
+
+gravity_poisson = glm(
+  formula = weight_integer~log(distance)+log(sim)+
+    log(from_turnover)+log(to_turnover)+ from_country + to_country,
+  data = links,
+  family = poisson(link='log')
+)
+summary(gravity_poisson)
+
+1 - sum((links$weight_integer - fitted(gravity_poisson))^2)/sum((links$weight_integer - mean(links$weight_integer))^2)
 
 
 
@@ -150,46 +195,129 @@ mf_map(st_cities, type = 'prop_choro', var = c('turnover','specK'), leg_pos = c(
 
 
 # Table des flux
-
-
+idfflows = readRDS('data/mobility/tabflows.Rds')
 
 
 # Fitter des modèles simples (pour chaque mode, pour l'ensemble des modes)
+summary(lm(log(FLOW)~log(DIST), data=idfflows))
 
+summary(lm(log(FLOW)~log(DIST), data=idfflows[idfflows$MODE=='NM',]))
+# -0.68937
+
+summary(lm(log(FLOW)~log(DIST), data=idfflows[idfflows$MODE=='TC',]))
+# -0.607988
+
+summary(lm(log(FLOW)~log(DIST), data=idfflows[idfflows$MODE=='VP',]))
+# -0.681978
 
 
 
 # Matrices de temps de trajet
-
-
-
+times = readRDS('data/mobility/listtimes.Rds')
 
 # jointure
+idfflows = left_join(idfflows, times$TC, by=c('ORI'='ORI','DES'='DES'))
+names(idfflows)[9] = "TIME_TC"
+idfflows = left_join(idfflows, times$VPM, by=c('ORI'='ORI','DES'='DES'))
+names(idfflows)[10] = "TIME_VPM"
+idfflows = left_join(idfflows, times$VPS, by=c('ORI'='ORI','DES'='DES'))
+names(idfflows)[11] = "TIME_VPS"
+idfflows$TIME_VP = (idfflows$TIME_VPM + idfflows$TIME_VPS)/2
+
 
 
 
 # Fitter des modèles prenant en compte la distance-temps réseau
+summary(lm(log(FLOW)~log(TIME_TC), data=idfflows[idfflows$MODE=='TC',]))
+
+summary(lm(log(FLOW)~log(TIME_VP), data=idfflows[idfflows$MODE=='VP',]))
+
+
+# Modele avec distance et distance temps
+summary(lm(log(FLOW)~log(TIME_TC)+log(DIST), data=idfflows[idfflows$MODE=='TC',]))
+
+summary(lm(log(FLOW)~log(TIME_VP)+log(DIST), data=idfflows[idfflows$MODE=='VP',]))
+
 
 
 # donnees socio-economiques (a l'IRIS): raffiner les modèles
-
+# Ref :  Raimbault, J. (2017, November). Identification de causalités dans des données spatio-temporelles. In Spatial Analysis and GEOmatics 2017.
+#   (données socio-eco uniquement)
 
 
 # charger dans une liste
-
-
+socioeco <- mget(
+  load('data/mobility/socioeco.RData', envir=(temp <- new.env())), envir=temp)
 
 # garder seulement la population en 2011, aggreger à la commune, ajouter a la table des flux (origine), idem destination
+populations = socioeco$pops
+populations = populations[populations$year=="11",]
+populations$code_com = substr(populations$id,1, 5)
+populations_aggr = as_tibble(populations) %>% 
+  group_by(code_com) %>% summarise(population = sum(var,na.rm=T))
 
+# ajouter a la table des flux (origine)
+idfflows = left_join(idfflows,populations_aggr,by=c('ORI'='code_com'))
+names(idfflows)[13] = "POP_ORI"
+# idem destination
+idfflows = left_join(idfflows,populations_aggr,by=c('DES'='code_com'))
+names(idfflows)[14] = "POP_DES"
 
 # idem avec income et employment
+incomes = socioeco$incomes
+incomes = incomes[incomes$year=="11",]
+incomes$code_com = substr(incomes$id,1, 5)
+incomes_aggr = as_tibble(incomes) %>% group_by(code_com) %>% summarise(income = median(var,na.rm=T)) # revenu median
+idfflows = left_join(idfflows,incomes_aggr,by=c('ORI'='code_com'))
+names(idfflows)[15] = "INC_ORI"
+idfflows = left_join(idfflows,incomes_aggr,by=c('DES'='code_com'))
+names(idfflows)[16] = "INC_DES"
+
+employment = socioeco$employment
+employment_aggr = as_tibble(employment) %>% group_by(id) %>% summarise(employment = sum(var,na.rm=T))
+idfflows = left_join(idfflows,employment_aggr,by=c('ORI'='id'))
+names(idfflows)[17] = "EMP_ORI"
+idfflows = left_join(idfflows,employment_aggr,by=c('DES'='id'))
+names(idfflows)[18] = "EMP_DES"
 
 
 # Modele complet pour chaque mode
+full_gravity_tc = lm(data=idfflows[idfflows$MODE=='TC',],
+                     log(FLOW)~log(TIME_TC)+log(POP_ORI)+log(POP_DES)+log(INC_ORI)+
+                       log(INC_DES)+log(EMP_ORI)+log(EMP_DES)
+)
+summary(full_gravity_tc)
+
+full_gravity_dist_tc = lm(data=idfflows[idfflows$MODE=='TC',],
+                          log(FLOW)~log(TIME_TC)+log(DIST)+log(POP_ORI)+log(POP_DES)+log(INC_ORI)+
+                            log(INC_DES)+log(EMP_ORI)+log(EMP_DES))
+summary(full_gravity_dist_tc)
+
+AIC(full_gravity_dist_tc) - AIC(full_gravity_tc)
 
 
 
-# Faire des modèles au niveau des IRIS
+full_gravity_vp = lm(data=idfflows[idfflows$MODE=='VP',],
+                     log(FLOW)~log(TIME_VP)+log(TIME_TC)+log(POP_ORI)+log(POP_DES)+log(INC_ORI)+
+                       log(INC_DES)+log(EMP_ORI)+log(EMP_DES)
+)
+summary(full_gravity_vp)
+
+full_gravity_dist_vp = lm(data=idfflows[idfflows$MODE=='VP',],
+                          log(FLOW)~log(TIME_VP)+log(TIME_TC)+log(DIST)+log(POP_ORI)+
+                            log(POP_DES)+log(INC_ORI)+log(INC_DES)+log(EMP_ORI)+log(EMP_DES))
+summary(full_gravity_dist_vp)
+
+AIC(full_gravity_dist_vp) - AIC(full_gravity_vp)
+
+# modele avec fonction exponentielle
+full_gravity_exp_vp = lm(data=idfflows[idfflows$MODE=='VP',],
+                         log(FLOW)~TIME_VP+TIME_TC+log(DIST)+log(POP_ORI)+
+                           log(POP_DES)+log(INC_ORI)+log(INC_DES)+log(EMP_ORI)+log(EMP_DES))
+summary(full_gravity_exp_vp)
+
+AIC(full_gravity_exp_vp) - AIC(full_gravity_vp)
+# -> moins bien que fonction puissance
 
 
 
