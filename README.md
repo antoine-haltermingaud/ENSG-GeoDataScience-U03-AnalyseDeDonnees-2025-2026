@@ -13,10 +13,16 @@
 
 [Flux domicile-travail communes 2019](https://www.insee.fr/fr/statistiques/6454112)
 
+### Santé
+
+[OMS indicators](https://data.who.int/indicators)
+
 ### Prix immobilier
 
 [Airbnb](https://insideairbnb.com/)
 
 [Demandes de Valeur Foncière](https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres/)
 
+### Délinquance
 
+https://www.data.gouv.fr/datasets/bases-statistiques-communale-departementale-et-regionale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales
