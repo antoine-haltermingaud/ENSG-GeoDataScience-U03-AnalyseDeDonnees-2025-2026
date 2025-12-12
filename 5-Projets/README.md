@@ -1,6 +1,14 @@
 
 # Données par thématiques
 
+## OpenStreetMap
+
+[Export des différentes couches pour la France](https://demo.openstreetmap.fr/)
+
+[Téléchargements par pays](https://download.geofabrik.de/)
+
+API standard ou overpass
+
 ## Mobilité
 
 [ETC 1994](https://www.statistiques.developpement-durable.gouv.fr/enquete-transports-et-communications-etc-1994)
