@@ -76,43 +76,84 @@ diameter(largestcomp)
 diameter(largestcomp,weights = runif(n=ecount(largestcomp),min=0.5,max=1))
 
 # diametre en fonction taille et proba du graphe aleatoire
-probas = seq(0.01,0.1,by=0.01)
+logprobas = seq(-5,-1,by=0.5)
 ns = seq(100,1000,by=100)
+B=100
 res = data.frame()
 for(n in ns){
   show(n)
-    for(p in probas){
-    g = sample_gnp(n=n,p=p)
-    comps = components(g)
-    largest_comp_ind = which(comps$csize==max(comps$csize))
-    tokept = (comps$membership==largest_comp_ind)
-    largestcomp = subgraph(g,tokept)
-    res = rbind(res,c(n=n,p=p,d=diameter(largestcomp),size=max(comps$csize)/n))
-  }
+    for(p in 10^logprobas){
+      for(b in 1:B){
+        g = sample_gnp(n=n,p=p)
+        comps = components(g)
+        largest_comp_ind = which(comps$csize==max(comps$csize))
+        tokept = (comps$membership==largest_comp_ind)
+        largestcomp = subgraph(g,tokept)
+        res = rbind(res,c(n=n,p=p,d=diameter(largestcomp),size=max(comps$csize)/n))
+      }
+    }
 }
 colnames(res)<-c("n","p","d","size")
 
-ggplot(res)+geom_line(aes(x=p,y=d,group=n,color=n))
+ggplot(res)+geom_smooth(aes(x=p,y=d,group=n,color=n))+scale_x_log10()
 
 
 # plotter le graphe
-
+g = sample_gnp(n=100,p=0.03)
+plot(g,vertex.label=NA,vertex.size=0)
 
 # layouts: algorithme de spatialisation du graphe
 # -> tester layout fruchterman reingold : layout_with_fr
-
+coords = igraph::layout_with_fr(g)
+V(g)$x = coords[,1]
+V(g)$y = coords[,2]
+plot(g,vertex.label=NA,vertex.size=0)
 
 
 # 1.2) Generer et plotter un graphe en grille (lattice): igraph::make_lattice
 
+#  (en theorie : nei = 1.5 pour connexions diagonales (future implémentation dans igraph))
+g = igraph::make_lattice(length = 10,dim=2)
+coords = layout_on_grid(g)
+V(g)$x = coords[,1];V(g)$y = coords[,2]
+plot(g,vertex.label=NA,vertex.size=0)
+
+plot_grille<-function(g){
+  coords = layout_on_grid(g)
+  V(g)$x = coords[,1];V(g)$y = coords[,2]
+  plot(g,vertex.label=NA,vertex.size=0)
+}
 
 # Supprimer des liens aléatoirement dans le graphe en grille
-
+coords = layout_on_grid(g);V(g)$x = coords[,1];V(g)$y = coords[,2]
+gsub = subgraph_from_edges(g,sample(E(g),0.5*ecount(g)))
+plot(gsub,vertex.label=NA,vertex.size=0)
 
 #  étudier la taille de la plus grande composante connexe
 #  en fonction de la proportion de liens gardés et de la taille du graphe
+probas = seq(0.1,0.9,by=0.1)
+ns = seq(10,20,by=1)
+B=100
+res = data.frame()
+for(n in ns){
+  show(n)
+  for(p in probas){
+    for(b in 1:B){
+      g = igraph::make_lattice(length = n,dim=2)
+      coords = layout_on_grid(g)
+      V(g)$x = coords[,1];V(g)$y = coords[,2]
+      gsub = subgraph_from_edges(g,sample(E(g),p*ecount(g)))
+      comps = components(gsub)
+      largest_comp_ind = which(comps$csize==max(comps$csize))
+      tokept = (comps$membership==largest_comp_ind)
+      largestcomp = subgraph(gsub,tokept)
+      res = rbind(res,c(n=n,p=p,d=diameter(largestcomp),size=max(comps$csize)/vcount(g)))
+    }
+  }
+}
+colnames(res)<-c("n","p","d","size")
 
-
+ggplot(res)+geom_smooth(aes(x=p,y=size,group=n,color=n))
 
 
 
@@ -121,24 +162,51 @@ ggplot(res)+geom_line(aes(x=p,y=d,group=n,color=n))
 # étudier le diametre en fonction des liens supprimes
 # algos: shortest_paths()/ distances() : algorithme adapte au cas (voir doc)
 
+g = igraph::make_lattice(length = 100,dim=2)
+coords = layout_on_grid(g)
+V(g)$x = jitter(coords[,1]);V(g)$y = jitter(coords[,2])
+plot(g,vertex.label=NA,vertex.size=0)
 
-
+gsub = subgraph_from_edges(g,sample(E(g),0.95*ecount(g)))
 
 # ajouter la distance euclidienne comme poids des liens
-
-
+v_ends = igraph::ends(gsub,1:ecount(gsub))
+lengths = apply(v_ends, 1, function(e){
+  sqrt( (V(gsub)$x[e[1]] - V(gsub)$x[e[2]])^2 + 
+          (V(gsub)$y[e[1]] - V(gsub)$y[e[2]])^2 )
+})
+E(gsub)$weight = lengths
 
 # tous les plus courts chemins: distances
-
+igraph::distances(gsub,v=V(gsub),to=V(gsub),weights = E(gsub)$weight)
 
 
 # certains plus courts chemins: shortest_paths
-
-
+path = shortest_paths(gsub,
+                      from = sample.int(vcount(gsub),1),
+                      to = sample.int(vcount(gsub),1)
+)
+plot(gsub, vertex.size=5, vertex.label=NA,
+     vertex.color = ifelse(V(gsub)%in%path$vpath[[1]],'green','black')
+)
 
 # plus court chemin entre coins dans le reseau en grille (sur la plus grande composante)
+comps = components(gsub)
+index_of_largest_component = which(comps$csize==max(comps$csize))
+vertices_in_largest = comps$membership==index_of_largest_component
+subgraph_largest = induced_subgraph(gsub, vertices_in_largest)
 
+first_col = V(subgraph_largest)[V(subgraph_largest)$x < min(V(subgraph_largest)$x + 1)]
+from = first_col[first_col$y==max(first_col$y)]
 
+last_col = V(subgraph_largest)[V(subgraph_largest)$x > max(V(subgraph_largest)$x - 1)]
+to = last_col[last_col$y==min(last_col$y)]
+
+path = shortest_paths(subgraph_largest,from = from,to = to)$vpath[[1]]
+
+plot(subgraph_largest,vertex.size=5,vertex.label=NA,
+     vertex.color = ifelse(V(subgraph_largest)%in%path,'green','black')
+)
 
 
 
