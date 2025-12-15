@@ -225,15 +225,13 @@ nodes <- read_csv("https://raw.githubusercontent.com/mathbeveridge/asoiaf/master
 edges <- read_csv("https://raw.githubusercontent.com/mathbeveridge/asoiaf/master/data/asoiaf-all-edges.csv")
 
 
-
-
 # construire le graphe: graph_from_data_frame
-
-
+g = graph_from_data_frame(d = edges,directed = F,vertices = nodes)
 
 # 2.2) ploter le graph avec un layout adapte
-
-
+coords = layout_with_fr(g)
+V(g)$x=coords[,1];V(g)$y=coords[,2]
+plot(g,vertex.label=NA,vertex.size=0)
 
 # pour bien visualiser: gephi, par exemple apres export en gml
 # https://gephi.org/
@@ -248,37 +246,70 @@ edges <- read_csv("https://raw.githubusercontent.com/mathbeveridge/asoiaf/master
 
 # 2.3) distribution des degres
 
+deg = degree(g)
+deg_pondere = strength(g)
 
 # histogramme
-
+hist(deg,breaks=25)
+hist(deg_pondere,breaks=25)
 
 # loi rang-taille : log(degre) ~ log(rang)
-
-
+plot(sort(log(deg_pondere),decreasing = T),log(1:vcount(g)))
 
 # ajuster des power law avec plus de parametres, ou des distributions log-normale
 # package poweRlaw
+library(poweRlaw)
+wdeg_estimator = poweRlaw::conpl$new(deg_pondere)
+est = poweRlaw::estimate_xmin(wdeg_estimator,xmax = max(deg_pondere))
+wdeg_estimator$setXmin(est)
 
+wdeg_estimator_lnorm = poweRlaw::conlnorm$new(deg_pondere)
+est_lnorm = poweRlaw::estimate_xmin(wdeg_estimator_lnorm,xmax = max(deg_pondere))
+wdeg_estimator_lnorm$setXmin(est_lnorm)
+
+plot(wdeg_estimator);lines(wdeg_estimator, col=2, lwd=2);lines(wdeg_estimator_lnorm, col=3, lwd=2)
 
 
 
 # 2.4) centralites : closeness, betwenness, eigenvalue
+cl = closeness(g,weights = 1/E(g)$weight)
+bw = betweenness(g,weights = 1/E(g)$weight)
+eig = eigen_centrality(g,weights = 1/E(g)$weight)$vector
 
+V(g)[which(deg_pondere==max(deg_pondere))]
+V(g)[which(cl==max(cl))]
+V(g)[which(bw==max(bw))]
+V(g)[which(eig==max(eig))]
 
+V(g)[which(bw>quantile(bw,0.99))]
 
 # role de la centralité pour expliquer le nombre d'occurences?
-
+cor(cl,deg_pondere)
+cor(bw,deg_pondere)
+cor(eig,deg_pondere)
 
 
 # 2.5) detection de communautes : cluster_... -> methode de Louvain cluster_louvain
+coms = cluster_louvain(g)
+coms
 
-
-
+coms = cluster_fast_greedy(g)
+coms
 
 # 2.6) plotter avec multiples infos: communaute, centralite, degre
 # (export dans le fichier "./graph.png")
+coords <- layout_nicely(g)
+V(g)$x = coords[,1];V(g)$y = coords[,2]
 
-
+png('graph.png',width=20,height=20, units='cm',res=300)
+plot(
+  g,
+  vertex.size = 3+log(strength(g))/2,
+  vertex.frame.color = NA,
+  vertex.color = coms$membership,
+  vertex.label.cex = log(1000*cl)/5 #eig/2
+)
+dev.off()
 
 
 
